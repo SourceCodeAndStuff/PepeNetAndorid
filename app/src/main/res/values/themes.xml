@@ -1,0 +1,7 @@
+<resources>
+
+    <style name="Theme.PepeNet" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#191A16</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>
