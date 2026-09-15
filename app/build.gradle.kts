@@ -94,10 +94,12 @@ tasks.register<Copy>("publishApk") {
     val apkName = publishedApkName
     val skip = ideInjectedBuild
     onlyIf { !skip }
-    // AGP 9 writes the signed APK under intermediates/; older versions under outputs/
-    from(layout.buildDirectory.dir("outputs/apk/release"), layout.buildDirectory.dir("intermediates/apk/release"))
-    include("app-release.apk")
+    // prefer the release APK; Build › Assemble Project produces both
+    from(layout.buildDirectory.dir("outputs/apk/debug")) { include("app-debug.apk") }
+    from(layout.buildDirectory.dir("outputs/apk/release")) { include("app-release.apk") }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     rename { apkName }
     into(rootProject.layout.projectDirectory.dir("releases"))
 }
-tasks.matching { it.name == "assembleRelease" }.configureEach { finalizedBy("publishApk") }
+tasks.matching { it.name == "assembleRelease" || it.name == "assembleDebug" }
+    .configureEach { finalizedBy("publishApk") }
