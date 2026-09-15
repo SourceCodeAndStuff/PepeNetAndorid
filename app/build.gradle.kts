@@ -82,16 +82,22 @@ dependencies {
 }
 
 // Copies the signed release APK to releases/PepeNet-<version>.apk (the file
-// linked from the README). Run: ./gradlew :app:publishApk
+// linked from the README). Runs after every real release build:
+//   ./gradlew :app:assembleRelease     or   Build › Generate App Bundles or APKs › Generate APKs
+// Android Studio's Run button injects android:testOnly="true" and builds one ABI;
+// such an APK is refused by the package installer ("package invalid"), so it
+// is never published.
 val publishedApkName = "PepeNet-$PEPENET_APP_VERSION.apk"
+val ideInjectedBuild = providers.gradleProperty("android.injected.testOnly").isPresent ||
+    providers.gradleProperty("android.injected.build.abi").isPresent
 tasks.register<Copy>("publishApk") {
     val apkName = publishedApkName
-    dependsOn("assembleRelease")
+    val skip = ideInjectedBuild
+    onlyIf { !skip }
     // AGP 9 writes the signed APK under intermediates/; older versions under outputs/
     from(layout.buildDirectory.dir("outputs/apk/release"), layout.buildDirectory.dir("intermediates/apk/release"))
     include("app-release.apk")
     rename { apkName }
     into(rootProject.layout.projectDirectory.dir("releases"))
 }
-// one-off: an IDE build also produces the downloadable APK
-tasks.matching { it.name == "assembleDebug" }.configureEach { finalizedBy("publishApk") }
+tasks.matching { it.name == "assembleRelease" }.configureEach { finalizedBy("publishApk") }
